@@ -2,13 +2,6 @@ package d250613.web_structure.ui;
 
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.util.ArrayList;
-
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -22,360 +15,295 @@ import javax.swing.table.DefaultTableModel;
 
 import d250613.member_project.model.Member;
 import d250613.member_project.util.DateUtil;
+import d250613.web_structure.service._5MemberService;
 
+// 원래 목적, 화면 제공, + 기능 : 결과, 코드가 길어짐. 
+// 기능 테스트, 
+// 기능 분리, 
 public class _4SignupFrame extends JFrame {
+    // 리팩토리 중,
+    private _5MemberService service = new _5MemberService();
 
-    // 파일 불러오는 경로를 전역으로 설정.
-    private static final String FILE_NAME = "member.txt"; // 회원 정보 저장 파일명
-    // 파일에서 불러온 멤버의 모든 정보를 담아둘 임시 공간 리스트
-    private ArrayList<Member> members = new ArrayList<>();
+    // =============================================================
+    // 추가1
 
     // Swing 관련 변수
     // 전체 흐름
-    // 테이블 구성 -> DefaultTableModel에 데이터 입력 -> JTable이 모델을 받아
-    // 화면에 테이블로 출력
-    // 테이블에서 수정,추가,삭제,검색하거나 tableModel 갱신됨.
-    private DefaultTableModel tableModel; // Swing에서 테이블 데이터를 저장관리하는 모델 클래스
-    // 셀 형식으로 UI보여줌
-    private JTable memberTable; // Swing에서 표 형태(UI)의 테이블 컴포넌트
+    // 테이블 구성 -> DefaultTableModel 에 데이터 입력 -> JTable 이 모델을 받아 화면에 테이블로 출력
+    // 테이블에서 수정, 추가, 삭제, 검색하거나 tableModel 갱싱됨.
+    private DefaultTableModel tableModel; // Swing에서 테이블 데이터를 저장/관리하는 기본 모델 클래스
+    private JTable memberTable; // Swing에서 표 형태(UI) 의 테이블 컴포넌트
 
-    // 검색 관련
-    private JTextField searchField;// 검색어 입력
+    // 검색 관련 컴포넌트
+    private JTextField searchField; // 검색어를 입력할수 있는 검색어 입력창. 선언만, 전역으로 사용가능.
     private JButton searchBtn; // 검색 버튼
     private JButton resetBtn; // 검색 초기화 버튼
-    // ==========================================================================================
+    // =============================================================
 
     public _4SignupFrame() {
         setTitle("회원 가입");
         setSize(900, 500);
-        setLocationRelativeTo(null);// 화면의 중앙에 위치
+        setLocationRelativeTo(null); // 화면에 중앙 배치.
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setVisible(true);
 
-        // 테이블 작업=====================================================================
-        // 1) 테이블 헤더 만들기. 이름, 이메일, 패스워드, 가입일
+        // =================================================================
+        // 추가2.
+        // 테이블 작업 부터 진행 하기.
+        // 1) 테이블 헤더 만들기, 이름, 이메일, 패스워드, 가입일 ,
         String[] cols = { "이름", "이메일", "패스워드", "가입일" };
-        // 헤더 제목을 tableModel에
-        // String 배열로 입력 해줌 0은 빈 테이블을 생성한다 라는 뜻
-        tableModel = new DefaultTableModel(cols, 0) { // 익명클래스
+        tableModel = new DefaultTableModel(cols, 0) { // 익명클래스,
             public boolean isCellEditable(int row, int column) {
-                return false; // 각 테이블의 셀 클릭시 값이 변경이 되는 모드인데
-                // 기본으로 변경 불가 모드로 변경
+                return false; // 각테이블의 셀 클릭시 값이 변경이 되는 모드 기본, 안되게 변경함.
             }
-        };
-        // 표 형태의 데이터를 -> 화면 출력용 테이블에 데이터 연결
+        }; // 헤더제목, 행을0으로 설정시 빈테이블 생성,
+           // 표 형태의 데이터를 ,-> 화면 출력용 테이블에 데이터 연결.
         memberTable = new JTable(tableModel);
-        // 보여주는 테이블에 데이터가 많아지면 스크롤 가능하게 하기
-        // 스크롤 기능이 있는 패널에 테이블 연결한거임
-        JScrollPane scrollPane = new JScrollPane(memberTable);
+        // 보여주는 테이블에, 데이터 많아지면, 스크롤이 가능하게, 스크롤 기능 첨부,
+        JScrollPane scrollPane = new JScrollPane(memberTable); // 스크롤 기능이 있는 패널에 테이블 연결.
 
-        // 버튼 패널 추가
-        JPanel btnPanel = new JPanel(); // JPanel의 기본 배치 관리자는 FlowLayout -> 나란히 배치
+        // 버튼 있는 패널 생성.
+        JPanel btnPanel = new JPanel(); // JPanel 의 기본 배치 관리자, FlowLayout ,나란히 배치.
         JButton addBtn = new JButton("회원가입");
         JButton updateBtn = new JButton("수정");
         JButton deleteBtn = new JButton("삭제");
         JButton reloadBtn = new JButton("새로고침");
+        // 더미 데이터 버튼
+        JButton dummyBtn = new JButton("더미데이터추가");
+
+        // 버튼을 패널에 붙이기.
         btnPanel.add(addBtn);
         btnPanel.add(updateBtn);
         btnPanel.add(deleteBtn);
         btnPanel.add(reloadBtn);
+        btnPanel.add(dummyBtn);
 
-        // 검색 패널 추가
+        // 검색 패널 생성
         JPanel searchPanel = new JPanel();
         searchField = new JTextField(20);
         searchBtn = new JButton("검색");
-        resetBtn = new JButton("초기화");
-        searchPanel.add(new JLabel("이름 또는 이메일 검색 : "));
+        resetBtn = new JButton("검색 초기화");
+        // 검색 패널에 버튼 붙이기 작업.
+        searchPanel.add(new JLabel("이름 또는 이메일 검색: "));
         searchPanel.add(searchField);
         searchPanel.add(searchBtn);
         searchPanel.add(resetBtn);
 
-        // 레이아웃 배치
-        // 총 3개의 패널 1.스크롤 패널 , 2. 버튼 패널 , 3.검색패널
+        // 레이아웃 배치 패널들 1) scrollPane : 데이터 테이블 2) btnPanel 버튼 3) searchPanel
         setLayout(new BorderLayout());
         add(searchPanel, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
         add(btnPanel, BorderLayout.SOUTH);
+        // =================================================================
 
-        // ==========================================================================================
+        // =================================================================
+        // 추가3
 
-        // 파일에서 데이터 불러오고, 테이블에 표시
-        loadMembersFromFile();
+        // 파일에서 데이터 불러오고 , 테이블 표시, 메서드 호출
+        service.loadMembersFromFile();
 
-        // 새로고침 기능
-        refreshTable();
+        // 새로고침 기능 호출.
+        service.refreshTable();
 
-        // 각각의 버튼에 기능들을 붙이는 이벤트 핸들러 작업.
+        // 각각의 버튼에 , 기능들을 붙이는 작업 이벤트 핸들러 작업.
+        // 회원 가입
         addBtn.addActionListener(e -> showAddDialog());
-
-        // 수정 버튼 이벤트 추가
+        // 수정.
         updateBtn.addActionListener(e -> showUpdateDialog());
-
-        // 삭제 버튼 이벤트 추가
+        // 삭제
         deleteBtn.addActionListener(e -> deleteSelectedMemberDialog());
-
-        // 새로고침 버튼 이벤트 추가
+        // 새로고침
         reloadBtn.addActionListener(e -> {
-            loadMembersFromFile();
-            refreshTable();
+            service.loadMembersFromFile();
+            service.refreshTable();
         });
-
-        // 검색 버튼 이벤트 추가
-        searchBtn.addActionListener(e -> searchMembers());
-
-        // 검색 초기화 버튼 이벤트 추가
+        // 검색
+        searchBtn.addActionListener(e -> service.searchMembers());
+        // 검색 초기화
         resetBtn.addActionListener(e -> {
             searchField.setText("");
-            refreshTable();
+            service.refreshTable();
         });
-
         // 검색어에서, 엔터를 입력해도, 실행이 되게끔.
-        searchField.addActionListener(e -> searchMembers());
+        searchField.addActionListener(e -> service.searchMembers());
+
+        // 더미 데이터 기능 추가 이벤트 리스너 연결.
+        dummyBtn.addActionListener(e -> service.dummyMake());
 
         // 안내 문구 표시
-        // JLabel label = new JLabel("회원가입 화면 입니다.", JLabel.CENTER);
+        // JLabel label = new JLabel("여기는 회원 가입 화면입니다.", JLabel.CENTER);
         // add(label);
 
-    }
-
-    // 각 기능 정의
-    // 1) csv파일에서 회원 목록 불러오기 member.txt 메서드 이름 : loadMEmbersFromFile();
-    private void loadMembersFromFile() {
-        members.clear();
-        File file = new File(FILE_NAME);
-        if (!file.exists()) {
-            try {
-                file.createNewFile();
-                System.out.println("새로운 파일 생성 : " + FILE_NAME);
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, "파일 생성 오류 : " + e.getMessage());
-
-                return;
-            }
-        }
-        // 파일 있는 경우 members에서 한 줄씩 읽어오기
-        // Member클래스에 객체를 만들고 저장하기
-        // 파일 읽기 작업, 반드시 try-catch작업 하기
-        // 한 바이트씩 읽기보다는 버퍼에 담아서 작업하면 성능이 좋음
-        try (BufferedReader br = new BufferedReader(new FileReader(FILE_NAME))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                Member member = Member.fromCSV(line);
-                if (member != null) {
-                    members.add(member);
-                }
-            }
-
-        } catch (Exception e) {
-            // TODO: handle exception
-        }
-    }
-
-    // 2) 회원 목록을 CSV파일에 저장, saveMembersToFile();
-    private void saveMembersToFile() {
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(FILE_NAME))) {
-            for (Member member : members) {
-                bw.write(member.toCSV());
-                bw.newLine();
-            }
-
-        } catch (Exception e) {
-            // 오류 발생시 간단히 알림창 띄우기
-            JOptionPane.showMessageDialog(this, "파일 저장 오류 : " + e.getMessage());
-        }
-    }
-
-    // 3) JTable에 회원 데이터 반영 (새로고침)
-    private void refreshTable() {
-        tableModel.setRowCount(0); // 기존 데이터 모두 제거, 모든 행 삭제,
-        for (Member member : members) {
-            // tableModel 에, 데이터 쓰기, 기본 데이터 테이블 데이터를 쓰고, -> 출력용 테이블 연결하기.
-            tableModel.addRow(new Object[] {
-                    member.getName(), member.getEmail(), member.getPassword(), member.getRegDate()
-            });
-        }
-    }
-
-    // 4) 검색 결과 테이블에 반영
-    private void showSearchResults(ArrayList<Member> results) {
-        tableModel.setRowCount(0);
-        for (Member member : results) {
-            // tableModel 에, 데이터 쓰기, 기본 데이터 테이블 데이터를 쓰고, -> 출력용 테이블 연결하기.
-            tableModel.addRow(new Object[] {
-                    member.getName(), member.getEmail(), member.getPassword(), member.getRegDate()
-            });
-        }
-    }
-
-    // 5) 검색 기능 (이름 or 이메일), 검색 결과만 표기
-    private void searchMembers() {
-        // 검색어 입력창에서, 검색어를 가져오기, 양쪽 공백 제거, 영어 인경우 모두 소문자로 변경하고
-        String query = searchField.getText().trim().toLowerCase();
-        // 유효성 체크. 검색어 비어 있는지 체크.
-        if (query.isEmpty()) {
-            refreshTable(); // 기본 전체 조회가 실행이 됨.
-            return;// 검색 기능 메서드 나가기,
-        }
-        // 임시로 담아둘 멤버 리스트 하나 정의.
-        ArrayList<Member> resultList = new ArrayList<>();
-        // members : 파일에서 읽어서, 담아둔 임시 전체 멤버 리스트,
-        // resultList, 아래 반복문에서, 검색어 일치하는 멤버들만 담을 공간.
-        for (Member member : members) {
-            if (member.getName().toLowerCase().contains(query) ||
-                    member.getEmail().toLowerCase().contains(query)) {
-                resultList.add(member);
-            }
-        }
-        // 검색 된 결과를, 화면에 출력하는 메서드에, 검색된 멤버 리스트를 넘겨주기.
-        showSearchResults(resultList);
-
-        // 검색된 결과가 없다면, 알림창으로 검색 결과가 없습니다.
-        if (resultList.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "검색 결과가 없습니다.");
-        }
+        // =================================================================
 
     }
 
-    // 6) 회원가입 입력 폼은 자바버전으로 작업함
+    // =================================================================
+    // 추가4
+    // 각 기능들 정의,
+
+    // 6) 회원 가입 입력 품, 다이얼 로그 창으로 작업, 자바버전으로
     private void showAddDialog() {
-        JTextField nameField = new JTextField("10글자 미만", 10);
-        JTextField emailField = new JTextField("15글자 미만", 15);
-        JTextField passwordField = new JTextField("10글자 미만", 10);
+        // 이름, 이메일, 패스워드, 입력 창(한줄 공간)
+        JTextField nameField = new JTextField(10);
+        JTextField emailField = new JTextField(15);
+        JTextField passwordField = new JPasswordField(10);
 
-        // 그리드 레이아웃으로 2열짜리 배치작업 하기
-        // 행(rows)을 0으로 설정하면 자동생성됨
+        // 그리드 레이아웃을 통해서, 2열짜리 배치 작업,
+        // 행을 0으로(행의 갯수 자동 생성), 열 표기,
         JPanel panel = new JPanel(new GridLayout(0, 2));
-        panel.add(new JLabel("이름 : "));
+        panel.add(new JLabel("이름 :"));
         panel.add(nameField);
-        panel.add(new JLabel("이메일 : "));
+
+        panel.add(new JLabel("이메일 :"));
         panel.add(emailField);
-        panel.add(new JLabel("패스워드 : "));
+
+        panel.add(new JLabel("패스워드 :"));
         panel.add(passwordField);
 
-        // 회원가입 버튼을 누를 경우 확인 알림창 띄우기
-        // 확인을 누르면 JOptionPane.showConfirmDialog() -> 특정 값 반환
-        // 수락-> JOptionPane.OK_OPTION (정수값 전달)
+        // 회원 가입 버튼 누를 경우, 확인 알림창 띄우기.
+        // 확인 버튼 클릭 -> JOptionPane.showConfirmDialog() -> 특정 값을 반환.
+        // 수락 -> 결과 OK 옵션 지정한 상수값 , 외우지, 이름으로 지정.
+        // 수락 -> JOptionPane.OK_OPTION
         int result = JOptionPane.showConfirmDialog(
-                this, // 알림창을 이 창에 띄우게 this : 현재 윈도우창
-                panel, // 사용자에게 보여줄 컨텐츠(JPanel)
-                "회원 가입", // 알림 창의 제목
+                this, // 이 알림창을 어디에 나타나게 할거냐? this : 현재 윈도우 창
+                panel, // 사용자에게 보여줄 콘텐츠 ( JPanel )
+                "회원 가입", // 알림 창에서의 제목
                 JOptionPane.OK_CANCEL_OPTION, // 확인, 취소 버튼을 구성하는 옵션
-                JOptionPane.PLAIN_MESSAGE);// 아이콘이 없는 일반 메시지 형식의 알림창을 의미함 => 기본 알림창
+                JOptionPane.PLAIN_MESSAGE // 아이콘이 없는 일반 메시지 형식의 알림창을 의미함. 기본 알림창
+        );
 
+        // 확인 알림창에서 수락시, 데이터를 파일 저장 시스템.
         if (result == JOptionPane.OK_OPTION) {
-            // 화면에서 입력창에 입력 했던 데이터 들을 다 가지고 와서, 임의의 변수를 담고
-            // Member 클래스 형식으로 인스턴스 만들고, 리스트 members추가하고
-            // ㅠ파일에 쓰기
-            String name = nameField.getText().trim(); // 텍스트 가져오고 양쪽 공백 제거
+            // 화면에서, 입력창에 입력 했던 데이터 들을 다 가지고 와서, 임의의 변수 담고,
+            // Member 클래스 형식으로 인스턴스 만들고, , 리스트 members 추가하고,
+            // 파일에 쓰기 작업함.
+            String name = nameField.getText().trim();
             String email = emailField.getText().trim();
             String password = passwordField.getText().trim();
             String regDate = DateUtil.getCurrentDateTime();
-            // 값 입출력 할때는 유효성 체크
+            // 값 입출력시, 유효성 체크 하기.
             if (name.isEmpty() || email.isEmpty() || password.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "모든 항목을 입력해주세요");
-                // 롤백 설정 필요
+                JOptionPane.showMessageDialog(this, "모든 항목을 입력해주세요.");
+                // 리턴 추가 예정.
                 return;
             }
+            // 입력이 다 했고,
+            // 인스턴스
             Member member = new Member(name, password, email, regDate);
-            members.add(member);
-            saveMembersToFile();
-            // 변경사항 새로고침, 즉 다 지우고 전체 회원을 다시 그리기.
-            refreshTable();
+            // members.add(member);
+            service.addMember(member);
+            service.saveMembersToFile();
+            // 변경사항 새로고침, 즉 다 지우고, 전체 회원을 다시 그리기.
+            service.refreshTable();
         }
     }
 
     // 7) 회원 수정 창
     private void showUpdateDialog() {
-
-        // 테이블 상에서 선택된 행의 번호를 가져와서 수정하는 작업
+        // 테이블 상에서, 선택된 행의 번호를 가져와서, 수정 작업,
         int row = memberTable.getSelectedRow();
-
+        // 유효성 체크.
         if (row == -1) {
-            JOptionPane.showMessageDialog(this, "수정할 회원을 선택하세요.");
+            JOptionPane.showMessageDialog(this, "수정 할 회원을 선택하세요.");
             return;
         }
+        // 전체 회원 목록 리스트에, 해당 회원 정보를 가져오기. .
+        // Member oldMember = members.get(row);
+        Member oldMember = service.getMembers().get(row);
 
-        // 전체 회원 목록 리스트에서 해당 회원 정보 가져오기
-        Member oldmember = members.get(row);
+        // 이름, 이메일, 패스워드, 입력 창(한줄 공간)
+        // 가입시에, 새롭게 내용을 입력을 했다면,
+        // 기존 회원의 정보를 먼저 불러오고, 필요한 부분만 수정 할 예정
+        JTextField nameField = new JTextField(oldMember.getName(), 10);
+        JTextField emailField = new JTextField(oldMember.getEmail(), 15);
+        JTextField passwordField = new JPasswordField(oldMember.getPassword(), 10);
 
-        // 회원 정보 불러오기
-        JTextField nameField = new JTextField(oldmember.getName(), 10);
-        JTextField emailField = new JTextField(oldmember.getEmail(), 15);
-        JTextField passwordField = new JTextField(oldmember.getPassword(), 10);
-
-        // 그리드 레이아웃으로 2열짜리 배치작업 하기
-        // 행(rows)을 0으로 설정하면 자동생성됨
+        // 그리드 레이아웃을 통해서, 2열짜리 배치 작업,
+        // 행을 0으로(행의 갯수 자동 생성), 열 표기,
         JPanel panel = new JPanel(new GridLayout(0, 2));
-        panel.add(new JLabel("이름 : "));
+        panel.add(new JLabel("이름 :"));
         panel.add(nameField);
-        panel.add(new JLabel("이메일 : "));
+
+        panel.add(new JLabel("이메일 :"));
         panel.add(emailField);
-        panel.add(new JLabel("패스워드 : "));
+
+        panel.add(new JLabel("패스워드 :"));
         panel.add(passwordField);
 
-        // 회원수정 버튼을 누를 경우 확인 알림창 띄우기
-        // 확인을 누르면 JOptionPane.showConfirmDialog() -> 특정 값 반환
-        // 수락-> JOptionPane.OK_OPTION (정수값 전달)
+        // 회원 수정 확인 버튼 누를 경우, 확인 알림창 띄우기.
+        // 확인 버튼 클릭 -> JOptionPane.showConfirmDialog() -> 특정 값을 반환.
+        // 수락 -> 결과 OK 옵션 지정한 상수값 , 외우지, 이름으로 지정.
+        // 수락 -> JOptionPane.OK_OPTION
         int result = JOptionPane.showConfirmDialog(
-                this, // 알림창을 이 창에 띄우게 this : 현재 윈도우창
-                panel, // 사용자에게 보여줄 컨텐츠(JPanel)
-                "회원 정보 수정", // 알림 창의 제목
+                this, // 이 알림창을 어디에 나타나게 할거냐? this : 현재 윈도우 창
+                panel, // 사용자에게 보여줄 콘텐츠 ( JPanel )
+                "회원 정보 수정", // 알림 창에서의 제목
                 JOptionPane.OK_CANCEL_OPTION, // 확인, 취소 버튼을 구성하는 옵션
-                JOptionPane.PLAIN_MESSAGE);// 아이콘이 없는 일반 메시지 형식의 알림창을 의미함 => 기본 알림창
+                JOptionPane.PLAIN_MESSAGE // 아이콘이 없는 일반 메시지 형식의 알림창을 의미함. 기본 알림창
+        );
 
+        // 확인 알림창에서 수락시, 데이터를 파일 저장 시스템.
         if (result == JOptionPane.OK_OPTION) {
-            // 화면에서 입력창에 입력 했던 데이터 들을 다 가지고 와서, 임의의 변수를 담고
-            // Member 클래스 형식으로 인스턴스 만들고, 리스트 members추가하고
-            // ㅠ파일에 쓰기
-            String name = nameField.getText().trim(); // 텍스트 가져오고 양쪽 공백 제거
+            // 화면에서, 입력창에 입력 했던 데이터 들을 다 가지고 와서, 임의의 변수 담고,
+            // Member 클래스 형식으로 인스턴스 만들고, , 리스트 members 추가하고,
+            // 파일에 쓰기 작업함.
+            String name = nameField.getText().trim();
             String email = emailField.getText().trim();
             String password = passwordField.getText().trim();
             String regDate = DateUtil.getCurrentDateTime();
-            // 값 입출력 할때는 유효성 체크
+            // 값 입출력시, 유효성 체크 하기.
             if (name.isEmpty() || email.isEmpty() || password.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "모든 항목을 입력해주세요");
-                // 롤백 설정 필요
+                JOptionPane.showMessageDialog(this, "모든 항목을 입력해주세요.");
+                // 리턴 추가 예정.
                 return;
             }
+            // 입력이 다 했고,
+            // 인스턴스
+            // 가입시
             // Member member = new Member(name, password, email, regDate);
-            oldmember.setName(name);
-            oldmember.setEmail(email);
-            oldmember.setPassword(password);
-            oldmember.setRegDate(regDate);
-            saveMembersToFile();
-            // 변경사항 새로고침, 즉 다 지우고 전체 회원을 다시 그리기.
-            refreshTable();
+            // 수정 할 경우
+            oldMember.setName(name);
+            oldMember.setEmail(email);
+            oldMember.setPassword(password);
+            oldMember.setRegDate(regDate);
+            service.saveMembersToFile();
+            // 변경사항 새로고침, 즉 다 지우고, 전체 회원을 다시 그리기.
+            service.refreshTable();
         }
     }
 
     // 8) 회원 삭제 기능.
     private void deleteSelectedMemberDialog() {
-
-        // 테이블 상에서 선택된 행의 번호를 가져와서 삭제하는 작업
+        // 테이블 상에서, 선택된 행의 번호를 가져와서, 수정 작업,
         int row = memberTable.getSelectedRow();
-
+        // 유효성 체크.
         if (row == -1) {
-            JOptionPane.showMessageDialog(this, "삭제할 회원을 선택하세요.");
+            JOptionPane.showMessageDialog(this, "삭제 할 회원을 선택하세요.");
             return;
         }
 
-        // 회원수정 버튼을 누를 경우 확인 알림창 띄우기
-        // 확인을 누르면 JOptionPane.showConfirmDialog() -> 특정 값 반환
-        // 수락-> JOptionPane.OK_OPTION (정수값 전달)
+        // 회원 수정 확인 버튼 누를 경우, 확인 알림창 띄우기.
+        // 확인 버튼 클릭 -> JOptionPane.showConfirmDialog() -> 특정 값을 반환.
+        // 수락 -> 결과 OK 옵션 지정한 상수값 , 외우지, 이름으로 지정.
+        // 수락 -> JOptionPane.OK_OPTION
         int result = JOptionPane.showConfirmDialog(
-                this, // 알림창을 이 창에 띄우게 this : 현재 윈도우창
-                "정말 삭제하시겠습니까?", // 사용자에게 보여줄 컨텐츠(JPanel)
-                "WARRNING", // 알림 창의 제목
-                JOptionPane.YES_NO_CANCEL_OPTION// 확인, 취소 버튼을 구성하는 옵션
-        );// 아이콘이 없는 일반 메시지 형식의 알림창을 의미함 => 기본 알림창
+                this, // 이 알림창을 어디에 나타나게 할거냐? this : 현재 윈도우 창
+                "정말 삭제하시겠습니까?", // 사용자에게 보여줄 콘텐츠 ( JPanel )
+                "회원 삭제", // 알림 창에서의 제목
+                JOptionPane.YES_NO_OPTION // 확인, 취소 버튼을 구성하는 옵션
+        );
 
+        // 확인 알림창에서 수락시, 데이터를 파일 저장 시스템.
         if (result == JOptionPane.YES_OPTION) {
-            members.remove(row);
-            saveMembersToFile();
-            // 변경사항 새로고침, 즉 다 지우고 전체 회원을 다시 그리기.
-            refreshTable();
+            // 리스트에 해당 멤버 삭제,
+            // members.remove(row);
+            service.getMembers().remove(row);
+            service.saveMembersToFile();
+            // 변경사항 새로고침, 즉 다 지우고, 전체 회원을 다시 그리기.
+            service.refreshTable();
         }
     }
-    // =====================================================================================
 
 }
+// =================================================================
