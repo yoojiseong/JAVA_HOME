@@ -1,0 +1,8 @@
+더미회원1,password1,dummy1@example.com,2025년 06월 12일 오전 11시 8분
+더미회원2,password2,dummy2@example.com,2025년 06월 12일 오전 11시 8분
+더미회원3,password3,dummy3@example.com,2025년 06월 12일 오전 11시 8분
+더미회원4,password4,dummy4@example.com,2025년 06월 12일 오전 11시 8분
+더미회원5,password5,dummy5@example.com,2025년 06월 12일 오전 11시 8분
+유지성,gs5842,gs9046@naver.com,2025년 06월 12일 오전 11시 9분
+유우지성,dfsd,sdfkjd,2025년 06월 12일 오전 11시 15분
+구보경,1234,pepe@gmai.com,2025년 06월 12일 오전 11시 21분
