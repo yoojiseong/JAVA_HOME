@@ -164,7 +164,7 @@ public class _5MemberService {
 
     // 5) 검색 기능 (이름 또는 이메일 검색어가 포함된 회원만 표시), 검색 결과만 표기.
     public void searchMembers() {
-        // 검색어 입력창에서, 검색어를 가져오기, 양쪽 공백 제거, 영어 인경우 모두 소문자로 변경하고
+        // 검색어 입력창에서, 검색어를 가져오기, 양쪽 공백 제거, 영어인경우 모두 소문자로 변경하고
         String query = searchField.getText().trim().toLowerCase();
         // 유효성 체크. 검색어 비어 있는지 체크.
         if (query.isEmpty()) {

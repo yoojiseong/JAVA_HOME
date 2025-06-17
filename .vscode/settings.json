@@ -1,0 +1,5 @@
+{
+    "java.project.referencedLibraries": [
+        "lib/**/*.jar" // lib폴더 하위에 모든 폴더 및 .jar파일을 참조한다
+    ]
+}

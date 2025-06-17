@@ -21,8 +21,6 @@ import d250613.web_structure.service._5MemberService;
 // 기능 테스트, 
 // 기능 분리, 
 public class _4SignupFrame extends JFrame {
-    // 리팩토리 중,
-    private _5MemberService service = new _5MemberService();
 
     // =============================================================
     // 추가1
@@ -39,6 +37,9 @@ public class _4SignupFrame extends JFrame {
     private JButton searchBtn; // 검색 버튼
     private JButton resetBtn; // 검색 초기화 버튼
     // =============================================================
+    // 리팩토리 중,
+    // 필요한 요소 1) tableModel 2)searchField
+    private _5MemberService service = new _5MemberService();
 
     public _4SignupFrame() {
         setTitle("회원 가입");
@@ -56,8 +57,12 @@ public class _4SignupFrame extends JFrame {
             public boolean isCellEditable(int row, int column) {
                 return false; // 각테이블의 셀 클릭시 값이 변경이 되는 모드 기본, 안되게 변경함.
             }
-        }; // 헤더제목, 행을0으로 설정시 빈테이블 생성,
-           // 표 형태의 데이터를 ,-> 화면 출력용 테이블에 데이터 연결.
+        }; // 헤더제목, 0 빈테이블 생성,
+
+        // 추가
+        service.setTableModel(tableModel);
+
+        // 표 형태의 데이터를 ,-> 화면 출력용 테이블에 데이터 연결.
         memberTable = new JTable(tableModel);
         // 보여주는 테이블에, 데이터 많아지면, 스크롤이 가능하게, 스크롤 기능 첨부,
         JScrollPane scrollPane = new JScrollPane(memberTable); // 스크롤 기능이 있는 패널에 테이블 연결.
@@ -81,6 +86,10 @@ public class _4SignupFrame extends JFrame {
         // 검색 패널 생성
         JPanel searchPanel = new JPanel();
         searchField = new JTextField(20);
+
+        // 추가.
+        service.setSearchField(searchField);
+
         searchBtn = new JButton("검색");
         resetBtn = new JButton("검색 초기화");
         // 검색 패널에 버튼 붙이기 작업.
